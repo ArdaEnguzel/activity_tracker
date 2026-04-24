@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: order-service
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/ecommerce
+    username: postgres
+    password: postgres
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8083
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
