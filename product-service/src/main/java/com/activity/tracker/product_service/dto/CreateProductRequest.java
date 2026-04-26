@@ -4,30 +4,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Data
-public class CreateProductRequest {
-
-    @NotBlank
-    private String name;
-
-    private String description;
-
-    private String category;
-
-    @NotNull
-    @Positive
-    private BigDecimal price;
-
-    @NotBlank
-    private String currency;
-
-    @NotNull
-    @PositiveOrZero
-    private Integer stockQuantity;
-
-    private String imageUrl;
-}
+public record CreateProductRequest(
+        @NotBlank String name,
+        String description,
+        String category,
+        @NotNull @Positive BigDecimal price,
+        @NotBlank String currency,
+        @NotNull @PositiveOrZero Integer stockQuantity,
+        String imageUrl
+) {}

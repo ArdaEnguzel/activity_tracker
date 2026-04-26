@@ -1,6 +1,9 @@
 package com.activity.tracker.order_service.service;
 
+import com.activity.tracker.order_service.client.ProductServiceClient;
+import com.activity.tracker.order_service.client.UserServiceClient;
 import com.activity.tracker.order_service.dto.CreateOrderRequest;
+import com.activity.tracker.order_service.dto.OrderItemRequest;
 import com.activity.tracker.order_service.dto.UpdateOrderStatusRequest;
 import com.activity.tracker.order_service.model.Order;
 import com.activity.tracker.order_service.model.OrderItem;
@@ -27,6 +30,8 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final ProductServiceClient productServiceClient;
+    private final UserServiceClient userServiceClient;
 
     public Flux<Order> findByUserId(String userId) {
         return orderRepository.findByUserId(userId);
@@ -47,45 +52,78 @@ public class OrderService {
 
     @Transactional
     public Mono<Order> create(CreateOrderRequest request) {
-        BigDecimal totalAmount = request.getItems().stream()
-                .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long userId;
+        try {
+            userId = Long.parseLong(request.userId());
+        } catch (NumberFormatException e) {
+            return Mono.error(new IllegalArgumentException("Invalid userId: " + request.userId()));
+        }
 
-        LocalDateTime now = LocalDateTime.now();
-        Order order = Order.builder()
-                .userId(request.getUserId())
-                .status("PENDING")
-                .totalAmount(totalAmount)
-                .currency(request.getCurrency())
-                .shippingAddress(request.getShippingAddress())
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+        return userServiceClient.getUser(userId)
+                .filter(u -> Boolean.TRUE.equals(u.getActive()))
+                .switchIfEmpty(Mono.error(new IllegalArgumentException(
+                        "User not found or inactive: " + request.userId())))
+                .flatMap(user -> resolveItems(request.items()))
+                .flatMap(resolvedItems -> {
+                    BigDecimal totalAmount = resolvedItems.stream()
+                            .map(ResolvedItem::totalPrice)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return orderRepository.save(order)
-                .flatMap(savedOrder -> {
-                    List<OrderItem> items = request.getItems().stream()
-                            .map(itemReq -> OrderItem.builder()
-                                    .orderId(savedOrder.getId())
-                                    .productId(itemReq.getProductId())
-                                    .productName(itemReq.getProductName())
-                                    .quantity(itemReq.getQuantity())
-                                    .unitPrice(itemReq.getUnitPrice())
-                                    .totalPrice(itemReq.getUnitPrice()
-                                            .multiply(BigDecimal.valueOf(itemReq.getQuantity())))
-                                    .build())
-                            .toList();
+                    LocalDateTime now = LocalDateTime.now();
+                    Order order = Order.builder()
+                            .userId(request.userId())
+                            .status("PENDING")
+                            .totalAmount(totalAmount)
+                            .currency(request.currency())
+                            .shippingAddress(request.shippingAddress())
+                            .createdAt(now)
+                            .updatedAt(now)
+                            .build();
 
-                    log.info("Creating order: orderId={} userId={} itemCount={} total={}",
-                            savedOrder.getId(), savedOrder.getUserId(),
-                            items.size(), savedOrder.getTotalAmount());
+                    return orderRepository.save(order)
+                            .flatMap(savedOrder -> {
+                                List<OrderItem> items = resolvedItems.stream()
+                                        .map(r -> OrderItem.builder()
+                                                .orderId(savedOrder.getId())
+                                                .productId(r.productId())
+                                                .productName(r.productName())
+                                                .quantity(r.quantity())
+                                                .unitPrice(r.unitPrice())
+                                                .totalPrice(r.totalPrice())
+                                                .build())
+                                        .toList();
 
-                    return orderItemRepository.saveAll(items).then(Mono.just(savedOrder));
+                                log.info("Creating order: orderId={} userId={} itemCount={} total={}",
+                                        savedOrder.getId(), savedOrder.getUserId(),
+                                        items.size(), savedOrder.getTotalAmount());
+
+                                return orderItemRepository.saveAll(items).then(Mono.just(savedOrder));
+                            });
                 });
     }
 
+    private Mono<List<ResolvedItem>> resolveItems(List<OrderItemRequest> itemRequests) {
+        return Flux.fromIterable(itemRequests)
+                .flatMap(item -> productServiceClient.getProduct(item.productId())
+                        .map(product -> {
+                            if (!Boolean.TRUE.equals(product.getActive())) {
+                                throw new IllegalArgumentException("Product is not active: " + product.getId());
+                            }
+                            if (product.getStockQuantity() < item.quantity()) {
+                                throw new IllegalArgumentException(
+                                        "Insufficient stock for product " + product.getId() +
+                                        ": requested=" + item.quantity() +
+                                        " available=" + product.getStockQuantity());
+                            }
+                            BigDecimal total = product.getPrice().multiply(BigDecimal.valueOf(item.quantity()));
+                            return new ResolvedItem(product.getId(), product.getName(),
+                                    item.quantity(), product.getPrice(), total);
+                        }))
+                .collectList();
+    }
+
     public Mono<Order> updateStatus(Long id, UpdateOrderStatusRequest request) {
-        String newStatus = request.getStatus().toUpperCase();
+        String newStatus = request.status().toUpperCase();
         if (!VALID_STATUSES.contains(newStatus)) {
             return Mono.error(new IllegalArgumentException("Invalid status: " + newStatus));
         }
@@ -106,4 +144,7 @@ public class OrderService {
                     .then(orderRepository.deleteById(id));
         });
     }
+
+    private record ResolvedItem(Long productId, String productName, Integer quantity,
+                                BigDecimal unitPrice, BigDecimal totalPrice) {}
 }

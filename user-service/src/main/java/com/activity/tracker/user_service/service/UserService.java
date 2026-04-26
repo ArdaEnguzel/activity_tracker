@@ -34,26 +34,26 @@ public class UserService {
     }
 
     public Mono<AppUser> create(CreateUserRequest request) {
-        return userRepository.existsByUsername(request.getUsername())
+        return userRepository.existsByUsername(request.username())
                 .flatMap(usernameExists -> {
                     if (usernameExists) {
                         return Mono.error(new IllegalArgumentException(
-                                "Username already taken: " + request.getUsername()));
+                                "Username already taken: " + request.username()));
                     }
-                    return userRepository.existsByEmail(request.getEmail());
+                    return userRepository.existsByEmail(request.email());
                 })
                 .flatMap(emailExists -> {
                     if (emailExists) {
                         return Mono.error(new IllegalArgumentException(
-                                "Email already registered: " + request.getEmail()));
+                                "Email already registered: " + request.email()));
                     }
                     LocalDateTime now = LocalDateTime.now();
                     AppUser user = AppUser.builder()
-                            .username(request.getUsername())
-                            .email(request.getEmail())
-                            .firstName(request.getFirstName())
-                            .lastName(request.getLastName())
-                            .phoneNumber(request.getPhoneNumber())
+                            .username(request.username())
+                            .email(request.email())
+                            .firstName(request.firstName())
+                            .lastName(request.lastName())
+                            .phoneNumber(request.phoneNumber())
                             .active(true)
                             .createdAt(now)
                             .updatedAt(now)
@@ -66,11 +66,11 @@ public class UserService {
 
     public Mono<AppUser> update(Long id, UpdateUserRequest request) {
         return findById(id).flatMap(existing -> {
-            if (request.getEmail() != null)       existing.setEmail(request.getEmail());
-            if (request.getFirstName() != null)   existing.setFirstName(request.getFirstName());
-            if (request.getLastName() != null)    existing.setLastName(request.getLastName());
-            if (request.getPhoneNumber() != null) existing.setPhoneNumber(request.getPhoneNumber());
-            if (request.getActive() != null)      existing.setActive(request.getActive());
+            if (request.email() != null)       existing.setEmail(request.email());
+            if (request.firstName() != null)   existing.setFirstName(request.firstName());
+            if (request.lastName() != null)    existing.setLastName(request.lastName());
+            if (request.phoneNumber() != null) existing.setPhoneNumber(request.phoneNumber());
+            if (request.active() != null)      existing.setActive(request.active());
             existing.setUpdatedAt(LocalDateTime.now());
 
             log.info("Updating user: id={}", id);

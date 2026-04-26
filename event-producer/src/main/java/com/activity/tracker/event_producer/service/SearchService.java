@@ -28,13 +28,13 @@ public class SearchService {
         SearchEvent event = SearchEvent.builder()
                 .eventId(UUID.randomUUID().toString())
                 .timestamp(LocalDateTime.now())
-                .userId(request.getUserId())
-                .sessionId(request.getSessionId())
-                .query(request.getQuery())
-                .filters(request.getFilters())
-                .resultProductIds(request.getResultProductIds())
-                .resultCount(request.getResultCount())
-                .responseTimeMs(request.getResponseTimeMs())
+                .userId(request.userId())
+                .sessionId(request.sessionId())
+                .query(request.query())
+                .filters(request.filters())
+                .resultProductIds(request.resultProductIds())
+                .resultCount(request.resultCount())
+                .responseTimeMs(request.responseTimeMs())
                 .build();
 
         String payload;

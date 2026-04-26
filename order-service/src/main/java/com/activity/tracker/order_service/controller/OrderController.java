@@ -44,9 +44,11 @@ public class OrderController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Order> create(@Valid @RequestBody CreateOrderRequest request) {
-        return orderService.create(request);
+    public Mono<ResponseEntity<Order>> create(@Valid @RequestBody CreateOrderRequest request) {
+        return orderService.create(request)
+                .map(order -> ResponseEntity.status(HttpStatus.CREATED).body(order))
+                .onErrorResume(IllegalArgumentException.class,
+                        ex -> Mono.just(ResponseEntity.badRequest().build()));
     }
 
     @PatchMapping("/{id}/status")

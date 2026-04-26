@@ -2,25 +2,16 @@ package com.activity.tracker.product_service.dto;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Data
-public class UpdateProductRequest {
-
-    private String name;
-    private String description;
-    private String category;
-
-    @Positive
-    private BigDecimal price;
-
-    private String currency;
-
-    @PositiveOrZero
-    private Integer stockQuantity;
-
-    private String imageUrl;
-    private Boolean active;
-}
+public record UpdateProductRequest(
+        String name,
+        String description,
+        String category,
+        @Positive BigDecimal price,
+        String currency,
+        @PositiveOrZero Integer stockQuantity,
+        String imageUrl,
+        Boolean active
+) {}

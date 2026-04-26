@@ -39,13 +39,13 @@ public class ProductService {
     public Mono<Product> create(CreateProductRequest request) {
         LocalDateTime now = LocalDateTime.now();
         Product product = Product.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .category(request.getCategory())
-                .price(request.getPrice())
-                .currency(request.getCurrency())
-                .stockQuantity(request.getStockQuantity())
-                .imageUrl(request.getImageUrl())
+                .name(request.name())
+                .description(request.description())
+                .category(request.category())
+                .price(request.price())
+                .currency(request.currency())
+                .stockQuantity(request.stockQuantity())
+                .imageUrl(request.imageUrl())
                 .active(true)
                 .createdAt(now)
                 .updatedAt(now)
@@ -57,14 +57,14 @@ public class ProductService {
 
     public Mono<Product> update(Long id, UpdateProductRequest request) {
         return findById(id).flatMap(existing -> {
-            if (request.getName() != null)          existing.setName(request.getName());
-            if (request.getDescription() != null)   existing.setDescription(request.getDescription());
-            if (request.getCategory() != null)      existing.setCategory(request.getCategory());
-            if (request.getPrice() != null)         existing.setPrice(request.getPrice());
-            if (request.getCurrency() != null)      existing.setCurrency(request.getCurrency());
-            if (request.getStockQuantity() != null) existing.setStockQuantity(request.getStockQuantity());
-            if (request.getImageUrl() != null)      existing.setImageUrl(request.getImageUrl());
-            if (request.getActive() != null)        existing.setActive(request.getActive());
+            if (request.name() != null)          existing.setName(request.name());
+            if (request.description() != null)   existing.setDescription(request.description());
+            if (request.category() != null)      existing.setCategory(request.category());
+            if (request.price() != null)         existing.setPrice(request.price());
+            if (request.currency() != null)      existing.setCurrency(request.currency());
+            if (request.stockQuantity() != null) existing.setStockQuantity(request.stockQuantity());
+            if (request.imageUrl() != null)      existing.setImageUrl(request.imageUrl());
+            if (request.active() != null)        existing.setActive(request.active());
             existing.setUpdatedAt(LocalDateTime.now());
 
             log.info("Updating product: id={}", id);

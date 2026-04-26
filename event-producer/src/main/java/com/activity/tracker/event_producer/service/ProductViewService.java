@@ -30,14 +30,14 @@ public class ProductViewService {
         ProductViewEvent event = ProductViewEvent.builder()
                 .eventId(UUID.randomUUID().toString())
                 .timestamp(LocalDateTime.now())
-                .userId(request.getUserId())
-                .sessionId(request.getSessionId())
-                .productId(request.getProductId())
-                .productName(request.getProductName())
-                .category(request.getCategory())
-                .price(request.getPrice())
-                .currency(request.getCurrency())
-                .referrer(request.getReferrer())
+                .userId(request.userId())
+                .sessionId(request.sessionId())
+                .productId(request.productId())
+                .productName(request.productName())
+                .category(request.category())
+                .price(request.price())
+                .currency(request.currency())
+                .referrer(request.referrer())
                 .build();
 
 

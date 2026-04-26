@@ -10,7 +10,7 @@ spring:
         - id: product-service
           uri: lb://product-service
           predicates:
-            - Path=/api/products/**
+            - Path=/api/products,/api/products/**
           filters:
             - name: CircuitBreaker
               args:
@@ -19,7 +19,7 @@ spring:
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/orders/**
+            - Path=/api/orders,/api/orders/**
           filters:
             - name: CircuitBreaker
               args:
@@ -29,7 +29,7 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/users/**
+            - Path=/api/users,/api/users/**
           filters:
             - name: CircuitBreaker
               args:
@@ -39,7 +39,7 @@ spring:
         - id: event-producer
           uri: lb://event-producer
           predicates:
-            - Path=/api/events/**
+            - Path=/api/events,/api/events/**
           filters:
             - name: CircuitBreaker
               args:
@@ -50,6 +50,8 @@ server:
   port: 8085
 
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/

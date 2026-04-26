@@ -26,21 +26,21 @@ public class AddToCartService {
     private final ObjectMapper objectMapper;
 
     public CompletableFuture<SendResult<String, String>> send(AddToCartRequest request) {
-        BigDecimal totalPrice = request.getUnitPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        BigDecimal totalPrice = request.unitPrice().multiply(BigDecimal.valueOf(request.quantity()));
 
         AddToCartEvent event = AddToCartEvent.builder()
                 .eventId(UUID.randomUUID().toString())
                 .timestamp(LocalDateTime.now())
-                .userId(request.getUserId())
-                .sessionId(request.getSessionId())
-                .cartId(request.getCartId())
-                .productId(request.getProductId())
-                .productName(request.getProductName())
-                .category(request.getCategory())
-                .quantity(request.getQuantity())
-                .unitPrice(request.getUnitPrice())
+                .userId(request.userId())
+                .sessionId(request.sessionId())
+                .cartId(request.cartId())
+                .productId(request.productId())
+                .productName(request.productName())
+                .category(request.category())
+                .quantity(request.quantity())
+                .unitPrice(request.unitPrice())
                 .totalPrice(totalPrice)
-                .currency(request.getCurrency())
+                .currency(request.currency())
                 .build();
 
         String payload;
